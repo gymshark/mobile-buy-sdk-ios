@@ -54,10 +54,12 @@ class PayCheckoutTests: XCTestCase {
             shippingDiscount: shipping,
             shippingAddress:  address,
             shippingRate:     rate,
+            availableShippingRates: nil,
             currencyCode:     "CAD",
             subtotalPrice:    30.0,
             needsShipping:    true,
             totalTax:         15.0,
+            total:            35.0,
             paymentDue:       35.0
         )
         

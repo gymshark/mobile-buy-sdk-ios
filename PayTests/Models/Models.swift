@@ -125,10 +125,12 @@ struct Models {
             shippingDiscount: shippingDiscount,
             shippingAddress:  shippingAddress,
             shippingRate:     shippingRate,
+            availableShippingRates: nil,
             currencyCode:     "CAD",
             subtotalPrice:    44.0,
             needsShipping:    requiresShipping,
             totalTax:         hasTax ? 6.0 : 0.0,
+            total:            50.0,
             paymentDue:       50.0
         )
     }
