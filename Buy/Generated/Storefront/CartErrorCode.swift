@@ -27,7 +27,7 @@
 import Foundation
 
 extension Storefront {
-	/// Possible error codes that could be returned by CartUserError. 
+	/// Possible error codes that can be returned by `CartUserError`. 
 	public enum CartErrorCode: String {
 		/// The input value is invalid. 
 		case invalid = "INVALID"

@@ -76,7 +76,7 @@ extension Storefront {
 			return self
 		}
 
-		/// The currency code for the Checkout. 
+		/// The currency code for the checkout. 
 		@discardableResult
 		open func currencyCode(alias: String? = nil) -> CheckoutQuery {
 			addField(field: "currencyCode", aliasSuffix: alias)
@@ -90,17 +90,6 @@ extension Storefront {
 			subfields(subquery)
 
 			addField(field: "customAttributes", aliasSuffix: alias, subfields: subquery)
-			return self
-		}
-
-		/// The customer associated with the checkout. 
-		@available(*, deprecated, message:"This field will always return null. If you have an authentication token for the customer, you can use the `customer` field on the query root to retrieve it.")
-		@discardableResult
-		open func customer(alias: String? = nil, _ subfields: (CustomerQuery) -> Void) -> CheckoutQuery {
-			let subquery = CustomerQuery()
-			subfields(subquery)
-
-			addField(field: "customer", aliasSuffix: alias, subfields: subquery)
 			return self
 		}
 
@@ -326,14 +315,14 @@ extension Storefront {
 			return self
 		}
 
-		/// Specifies if the Checkout is tax exempt. 
+		/// Whether the checkout is tax exempt. 
 		@discardableResult
 		open func taxExempt(alias: String? = nil) -> CheckoutQuery {
 			addField(field: "taxExempt", aliasSuffix: alias)
 			return self
 		}
 
-		/// Specifies if taxes are included in the line item and shipping line prices. 
+		/// Whether taxes are included in the line item and shipping line prices. 
 		@discardableResult
 		open func taxesIncluded(alias: String? = nil) -> CheckoutQuery {
 			addField(field: "taxesIncluded", aliasSuffix: alias)
@@ -455,13 +444,6 @@ extension Storefront {
 					throw SchemaViolationError(type: Checkout.self, field: fieldName, value: fieldValue)
 				}
 				return try value.map { return try Attribute(fields: $0) }
-
-				case "customer":
-				if value is NSNull { return nil }
-				guard let value = value as? [String: Any] else {
-					throw SchemaViolationError(type: Checkout.self, field: fieldName, value: fieldValue)
-				}
-				return try Customer(fields: value)
 
 				case "discountApplications":
 				guard let value = value as? [String: Any] else {
@@ -677,7 +659,7 @@ extension Storefront {
 			return field(field: "createdAt", aliasSuffix: alias) as! Date
 		}
 
-		/// The currency code for the Checkout. 
+		/// The currency code for the checkout. 
 		open var currencyCode: Storefront.CurrencyCode {
 			return internalGetCurrencyCode()
 		}
@@ -693,16 +675,6 @@ extension Storefront {
 
 		func internalGetCustomAttributes(alias: String? = nil) -> [Storefront.Attribute] {
 			return field(field: "customAttributes", aliasSuffix: alias) as! [Storefront.Attribute]
-		}
-
-		/// The customer associated with the checkout. 
-		@available(*, deprecated, message:"This field will always return null. If you have an authentication token for the customer, you can use the `customer` field on the query root to retrieve it.")
-		open var customer: Storefront.Customer? {
-			return internalGetCustomer()
-		}
-
-		func internalGetCustomer(alias: String? = nil) -> Storefront.Customer? {
-			return field(field: "customer", aliasSuffix: alias) as! Storefront.Customer?
 		}
 
 		/// Discounts that have been applied on the checkout. 
@@ -878,7 +850,7 @@ extension Storefront {
 			return field(field: "subtotalPriceV2", aliasSuffix: alias) as! Storefront.MoneyV2
 		}
 
-		/// Specifies if the Checkout is tax exempt. 
+		/// Whether the checkout is tax exempt. 
 		open var taxExempt: Bool {
 			return internalGetTaxExempt()
 		}
@@ -887,7 +859,7 @@ extension Storefront {
 			return field(field: "taxExempt", aliasSuffix: alias) as! Bool
 		}
 
-		/// Specifies if taxes are included in the line item and shipping line prices. 
+		/// Whether taxes are included in the line item and shipping line prices. 
 		open var taxesIncluded: Bool {
 			return internalGetTaxesIncluded()
 		}
@@ -989,12 +961,6 @@ extension Storefront {
 					internalGetCustomAttributes().forEach {
 						response.append($0)
 						response.append(contentsOf: $0.childResponseObjectMap())
-					}
-
-					case "customer":
-					if let value = internalGetCustomer() {
-						response.append(value)
-						response.append(contentsOf: value.childResponseObjectMap())
 					}
 
 					case "discountApplications":

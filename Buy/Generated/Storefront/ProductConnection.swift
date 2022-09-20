@@ -41,6 +41,26 @@ extension Storefront {
 			return self
 		}
 
+		/// A list of available filters. 
+		@discardableResult
+		open func filters(alias: String? = nil, _ subfields: (FilterQuery) -> Void) -> ProductConnectionQuery {
+			let subquery = FilterQuery()
+			subfields(subquery)
+
+			addField(field: "filters", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
+
+		/// A list of the nodes contained in ProductEdge. 
+		@discardableResult
+		open func nodes(alias: String? = nil, _ subfields: (ProductQuery) -> Void) -> ProductConnectionQuery {
+			let subquery = ProductQuery()
+			subfields(subquery)
+
+			addField(field: "nodes", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
+
 		/// Information to aid in pagination. 
 		@discardableResult
 		open func pageInfo(alias: String? = nil, _ subfields: (PageInfoQuery) -> Void) -> ProductConnectionQuery {
@@ -65,6 +85,18 @@ extension Storefront {
 				}
 				return try value.map { return try ProductEdge(fields: $0) }
 
+				case "filters":
+				guard let value = value as? [[String: Any]] else {
+					throw SchemaViolationError(type: ProductConnection.self, field: fieldName, value: fieldValue)
+				}
+				return try value.map { return try Filter(fields: $0) }
+
+				case "nodes":
+				guard let value = value as? [[String: Any]] else {
+					throw SchemaViolationError(type: ProductConnection.self, field: fieldName, value: fieldValue)
+				}
+				return try value.map { return try Product(fields: $0) }
+
 				case "pageInfo":
 				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: ProductConnection.self, field: fieldName, value: fieldValue)
@@ -85,6 +117,24 @@ extension Storefront {
 			return field(field: "edges", aliasSuffix: alias) as! [Storefront.ProductEdge]
 		}
 
+		/// A list of available filters. 
+		open var filters: [Storefront.Filter] {
+			return internalGetFilters()
+		}
+
+		func internalGetFilters(alias: String? = nil) -> [Storefront.Filter] {
+			return field(field: "filters", aliasSuffix: alias) as! [Storefront.Filter]
+		}
+
+		/// A list of the nodes contained in ProductEdge. 
+		open var nodes: [Storefront.Product] {
+			return internalGetNodes()
+		}
+
+		func internalGetNodes(alias: String? = nil) -> [Storefront.Product] {
+			return field(field: "nodes", aliasSuffix: alias) as! [Storefront.Product]
+		}
+
 		/// Information to aid in pagination. 
 		open var pageInfo: Storefront.PageInfo {
 			return internalGetPageInfo()
@@ -100,6 +150,18 @@ extension Storefront {
 				switch($0) {
 					case "edges":
 					internalGetEdges().forEach {
+						response.append($0)
+						response.append(contentsOf: $0.childResponseObjectMap())
+					}
+
+					case "filters":
+					internalGetFilters().forEach {
+						response.append($0)
+						response.append(contentsOf: $0.childResponseObjectMap())
+					}
+
+					case "nodes":
+					internalGetNodes().forEach {
 						response.append($0)
 						response.append(contentsOf: $0.childResponseObjectMap())
 					}

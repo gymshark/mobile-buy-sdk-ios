@@ -95,7 +95,7 @@ extension Storefront {
 
 		/// A client-side generated token to identify a payment and perform idempotent 
 		/// operations. For more information, refer to [Idempotent 
-		/// requests](https://shopify.dev/concepts/about-apis/idempotent-requests). 
+		/// requests](https://shopify.dev/api/usage/idempotent-requests). 
 		@discardableResult
 		open func idempotencyKey(alias: String? = nil) -> PaymentQuery {
 			addField(field: "idempotencyKey", aliasSuffix: alias)
@@ -110,7 +110,7 @@ extension Storefront {
 			return self
 		}
 
-		/// Whether or not the payment is still processing asynchronously. 
+		/// Whether the payment is still processing asynchronously. 
 		@discardableResult
 		open func ready(alias: String? = nil) -> PaymentQuery {
 			addField(field: "ready", aliasSuffix: alias)
@@ -293,7 +293,7 @@ extension Storefront {
 
 		/// A client-side generated token to identify a payment and perform idempotent 
 		/// operations. For more information, refer to [Idempotent 
-		/// requests](https://shopify.dev/concepts/about-apis/idempotent-requests). 
+		/// requests](https://shopify.dev/api/usage/idempotent-requests). 
 		open var idempotencyKey: String? {
 			return internalGetIdempotencyKey()
 		}
@@ -312,7 +312,7 @@ extension Storefront {
 			return field(field: "nextActionUrl", aliasSuffix: alias) as! URL?
 		}
 
-		/// Whether or not the payment is still processing asynchronously. 
+		/// Whether the payment is still processing asynchronously. 
 		open var ready: Bool {
 			return internalGetReady()
 		}

@@ -27,7 +27,9 @@
 import Foundation
 
 extension Storefront {
-	/// Currency codes. 
+	/// The three-letter currency codes that represent the world currencies used in 
+	/// stores. These include standard ISO 4217 codes, legacy codes, and 
+	/// non-standard codes. 
 	public enum CurrencyCode: String {
 		/// United Arab Emirates Dirham (AED). 
 		case aed = "AED"
@@ -418,7 +420,11 @@ extension Storefront {
 		case ssp = "SSP"
 
 		/// Sao Tome And Principe Dobra (STD). 
+		@available(*, deprecated, message:"`STD` is deprecated. Use `STN` available from version `2022-07` onwards instead.")
 		case std = "STD"
+
+		/// Sao Tome And Principe Dobra (STN). 
+		case stn = "STN"
 
 		/// Syrian Pound (SYP). 
 		case syp = "SYP"
@@ -467,6 +473,9 @@ extension Storefront {
 
 		/// Uzbekistan som (UZS). 
 		case uzs = "UZS"
+
+		/// Venezuelan Bolivares (VED). 
+		case ved = "VED"
 
 		/// Venezuelan Bolivares (VEF). 
 		@available(*, deprecated, message:"`VEF` is deprecated. Use `VES` available from version `2020-10` onwards instead.")

@@ -74,7 +74,7 @@ extension Storefront {
 	}
 
 	/// Represents a Shopify hosted video. 
-	open class Video: GraphQL.AbstractResponse, GraphQLObject, Media, Node {
+	open class Video: GraphQL.AbstractResponse, GraphQLObject, Media, MetafieldReference, Node {
 		public typealias Query = VideoQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {

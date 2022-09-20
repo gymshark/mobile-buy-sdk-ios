@@ -1,10 +1,6 @@
 name: Build new schema
 
 on:
-  schedule:
-    # Run on midnight UTC on the first of jan/apr/jul/oct
-    # API is released 1PM EDT/EST
-    - cron: "59 23 1 1/3 *"
   workflow_dispatch:
 
 jobs:
@@ -12,11 +8,8 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-      - name: Checkout master
-        uses: actions/checkout@master
-        with:
-          ref: "master"
-          ssh-key: ${{ secrets.SSH_ACTIONS_KEY }}
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Install Ruby
         uses: ruby/setup-ruby@v1
@@ -57,12 +50,12 @@ jobs:
             github.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Update schema (auto-generated)',
+              title: "Update Schema to `" + api_version + "` Release",
               head: branch_name,
-              base: 'master',
+              base: 'main',
               body: "### Release notes" +
                 "\n" +
-                `\nThe [latest schema changes](https://shopify.dev/concepts/about-apis/versioning/release-notes/${api_version}#storefront-api-changes).` +
+                `\nThe [latest schema changes](https://shopify.dev/api/release-notes/${api_version}#graphql-storefront-api-changes).` +
                 "\n" +
                 "\n#### Steps to release" +
                 "\n- [ ] Tests are passing" +

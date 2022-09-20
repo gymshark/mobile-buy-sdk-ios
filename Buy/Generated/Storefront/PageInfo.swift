@@ -27,32 +27,57 @@
 import Foundation
 
 extension Storefront {
-	/// Information about pagination in a connection. 
+	/// Returns information about pagination in a connection, in accordance with 
+	/// the [Relay 
+	/// specification](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo). 
 	open class PageInfoQuery: GraphQL.AbstractQuery, GraphQLQuery {
 		public typealias Response = PageInfo
 
-		/// Indicates if there are more pages to fetch. 
+		/// The cursor corresponding to the last node in edges. 
+		@discardableResult
+		open func endCursor(alias: String? = nil) -> PageInfoQuery {
+			addField(field: "endCursor", aliasSuffix: alias)
+			return self
+		}
+
+		/// Whether there are more pages to fetch following the current page. 
 		@discardableResult
 		open func hasNextPage(alias: String? = nil) -> PageInfoQuery {
 			addField(field: "hasNextPage", aliasSuffix: alias)
 			return self
 		}
 
-		/// Indicates if there are any pages prior to the current page. 
+		/// Whether there are any pages prior to the current page. 
 		@discardableResult
 		open func hasPreviousPage(alias: String? = nil) -> PageInfoQuery {
 			addField(field: "hasPreviousPage", aliasSuffix: alias)
 			return self
 		}
+
+		/// The cursor corresponding to the first node in edges. 
+		@discardableResult
+		open func startCursor(alias: String? = nil) -> PageInfoQuery {
+			addField(field: "startCursor", aliasSuffix: alias)
+			return self
+		}
 	}
 
-	/// Information about pagination in a connection. 
+	/// Returns information about pagination in a connection, in accordance with 
+	/// the [Relay 
+	/// specification](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo). 
 	open class PageInfo: GraphQL.AbstractResponse, GraphQLObject {
 		public typealias Query = PageInfoQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
 			let fieldValue = value
 			switch fieldName {
+				case "endCursor":
+				if value is NSNull { return nil }
+				guard let value = value as? String else {
+					throw SchemaViolationError(type: PageInfo.self, field: fieldName, value: fieldValue)
+				}
+				return value
+
 				case "hasNextPage":
 				guard let value = value as? Bool else {
 					throw SchemaViolationError(type: PageInfo.self, field: fieldName, value: fieldValue)
@@ -65,12 +90,28 @@ extension Storefront {
 				}
 				return value
 
+				case "startCursor":
+				if value is NSNull { return nil }
+				guard let value = value as? String else {
+					throw SchemaViolationError(type: PageInfo.self, field: fieldName, value: fieldValue)
+				}
+				return value
+
 				default:
 				throw SchemaViolationError(type: PageInfo.self, field: fieldName, value: fieldValue)
 			}
 		}
 
-		/// Indicates if there are more pages to fetch. 
+		/// The cursor corresponding to the last node in edges. 
+		open var endCursor: String? {
+			return internalGetEndCursor()
+		}
+
+		func internalGetEndCursor(alias: String? = nil) -> String? {
+			return field(field: "endCursor", aliasSuffix: alias) as! String?
+		}
+
+		/// Whether there are more pages to fetch following the current page. 
 		open var hasNextPage: Bool {
 			return internalGetHasNextPage()
 		}
@@ -79,13 +120,22 @@ extension Storefront {
 			return field(field: "hasNextPage", aliasSuffix: alias) as! Bool
 		}
 
-		/// Indicates if there are any pages prior to the current page. 
+		/// Whether there are any pages prior to the current page. 
 		open var hasPreviousPage: Bool {
 			return internalGetHasPreviousPage()
 		}
 
 		func internalGetHasPreviousPage(alias: String? = nil) -> Bool {
 			return field(field: "hasPreviousPage", aliasSuffix: alias) as! Bool
+		}
+
+		/// The cursor corresponding to the first node in edges. 
+		open var startCursor: String? {
+			return internalGetStartCursor()
+		}
+
+		func internalGetStartCursor(alias: String? = nil) -> String? {
+			return field(field: "startCursor", aliasSuffix: alias) as! String?
 		}
 
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {

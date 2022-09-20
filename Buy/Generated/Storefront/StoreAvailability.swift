@@ -27,11 +27,13 @@
 import Foundation
 
 extension Storefront {
-	/// Describes the availability of a product variant at a particular location. 
+	/// The availability of a product variant at a particular location. Local 
+	/// pick-up must be enabled in the store's shipping settings, otherwise this 
+	/// will return an empty result. 
 	open class StoreAvailabilityQuery: GraphQL.AbstractQuery, GraphQLQuery {
 		public typealias Response = StoreAvailability
 
-		/// Whether or not this product variant is in-stock at this location. 
+		/// Whether the product variant is in-stock at this location. 
 		@discardableResult
 		open func available(alias: String? = nil) -> StoreAvailabilityQuery {
 			addField(field: "available", aliasSuffix: alias)
@@ -57,7 +59,9 @@ extension Storefront {
 		}
 	}
 
-	/// Describes the availability of a product variant at a particular location. 
+	/// The availability of a product variant at a particular location. Local 
+	/// pick-up must be enabled in the store's shipping settings, otherwise this 
+	/// will return an empty result. 
 	open class StoreAvailability: GraphQL.AbstractResponse, GraphQLObject {
 		public typealias Query = StoreAvailabilityQuery
 
@@ -87,7 +91,7 @@ extension Storefront {
 			}
 		}
 
-		/// Whether or not this product variant is in-stock at this location. 
+		/// Whether the product variant is in-stock at this location. 
 		open var available: Bool {
 			return internalGetAvailable()
 		}

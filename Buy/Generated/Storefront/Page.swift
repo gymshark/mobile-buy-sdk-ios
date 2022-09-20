@@ -71,8 +71,8 @@ extension Storefront {
 		/// Returns a metafield found by namespace and key. 
 		///
 		/// - parameters:
-		///     - namespace: Container for a set of metafields (maximum of 20 characters).
-		///     - key: Identifier for the metafield (maximum of 30 characters).
+		///     - namespace: A container for a set of metafields.
+		///     - key: The identifier for the metafield.
 		///
 		@discardableResult
 		open func metafield(alias: String? = nil, namespace: String, key: String, _ subfields: (MetafieldQuery) -> Void) -> PageQuery {
@@ -91,47 +91,21 @@ extension Storefront {
 			return self
 		}
 
-		/// A paginated list of metafields associated with the resource. 
+		/// The metafields associated with the resource matching the supplied list of 
+		/// namespaces and keys. 
 		///
 		/// - parameters:
-		///     - namespace: Container for a set of metafields (maximum of 20 characters).
-		///     - first: Returns up to the first `n` elements from the list.
-		///     - after: Returns the elements that come after the specified cursor.
-		///     - last: Returns up to the last `n` elements from the list.
-		///     - before: Returns the elements that come before the specified cursor.
-		///     - reverse: Reverse the order of the underlying list.
+		///     - identifiers: The list of metafields to retrieve by namespace and key.
 		///
 		@discardableResult
-		open func metafields(alias: String? = nil, namespace: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (MetafieldConnectionQuery) -> Void) -> PageQuery {
+		open func metafields(alias: String? = nil, identifiers: [HasMetafieldsIdentifier], _ subfields: (MetafieldQuery) -> Void) -> PageQuery {
 			var args: [String] = []
 
-			if let namespace = namespace {
-				args.append("namespace:\(GraphQL.quoteString(input: namespace))")
-			}
+			args.append("identifiers:[\(identifiers.map{ "\($0.serialize())" }.joined(separator: ","))]")
 
-			if let first = first {
-				args.append("first:\(first)")
-			}
+			let argsString = "(\(args.joined(separator: ",")))"
 
-			if let after = after {
-				args.append("after:\(GraphQL.quoteString(input: after))")
-			}
-
-			if let last = last {
-				args.append("last:\(last)")
-			}
-
-			if let before = before {
-				args.append("before:\(GraphQL.quoteString(input: before))")
-			}
-
-			if let reverse = reverse {
-				args.append("reverse:\(reverse)")
-			}
-
-			let argsString: String? = args.isEmpty ? nil : "(\(args.joined(separator: ",")))"
-
-			let subquery = MetafieldConnectionQuery()
+			let subquery = MetafieldQuery()
 			subfields(subquery)
 
 			addField(field: "metafields", aliasSuffix: alias, args: argsString, subfields: subquery)
@@ -170,19 +144,11 @@ extension Storefront {
 			addField(field: "updatedAt", aliasSuffix: alias)
 			return self
 		}
-
-		/// The url pointing to the page accessible from the web. 
-		@available(*, deprecated, message:"Use `onlineStoreUrl` instead")
-		@discardableResult
-		open func url(alias: String? = nil) -> PageQuery {
-			addField(field: "url", aliasSuffix: alias)
-			return self
-		}
 	}
 
 	/// Shopify merchants can create pages to hold static HTML content. Each Page 
 	/// object represents a custom page on the online store. 
-	open class Page: GraphQL.AbstractResponse, GraphQLObject, HasMetafields, MetafieldParentResource, Node, OnlineStorePublishable {
+	open class Page: GraphQL.AbstractResponse, GraphQLObject, HasMetafields, MetafieldParentResource, MetafieldReference, Node, OnlineStorePublishable {
 		public typealias Query = PageQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
@@ -226,10 +192,14 @@ extension Storefront {
 				return try Metafield(fields: value)
 
 				case "metafields":
-				guard let value = value as? [String: Any] else {
+				guard let value = value as? [Any] else {
 					throw SchemaViolationError(type: Page.self, field: fieldName, value: fieldValue)
 				}
-				return try MetafieldConnection(fields: value)
+				return try value.map { if $0 is NSNull { return nil }
+				guard let value = $0 as? [String: Any] else {
+					throw SchemaViolationError(type: Page.self, field: fieldName, value: fieldValue)
+				}
+				return try Metafield(fields: value) } as [Any?]
 
 				case "onlineStoreUrl":
 				if value is NSNull { return nil }
@@ -256,12 +226,6 @@ extension Storefront {
 					throw SchemaViolationError(type: Page.self, field: fieldName, value: fieldValue)
 				}
 				return GraphQL.iso8601DateParser.date(from: value)!
-
-				case "url":
-				guard let value = value as? String else {
-					throw SchemaViolationError(type: Page.self, field: fieldName, value: fieldValue)
-				}
-				return URL(string: value)!
 
 				default:
 				throw SchemaViolationError(type: Page.self, field: fieldName, value: fieldValue)
@@ -327,17 +291,18 @@ extension Storefront {
 			return field(field: "metafield", aliasSuffix: alias) as! Storefront.Metafield?
 		}
 
-		/// A paginated list of metafields associated with the resource. 
-		open var metafields: Storefront.MetafieldConnection {
+		/// The metafields associated with the resource matching the supplied list of 
+		/// namespaces and keys. 
+		open var metafields: [Storefront.Metafield?] {
 			return internalGetMetafields()
 		}
 
-		open func aliasedMetafields(alias: String) -> Storefront.MetafieldConnection {
+		open func aliasedMetafields(alias: String) -> [Storefront.Metafield?] {
 			return internalGetMetafields(alias: alias)
 		}
 
-		func internalGetMetafields(alias: String? = nil) -> Storefront.MetafieldConnection {
-			return field(field: "metafields", aliasSuffix: alias) as! Storefront.MetafieldConnection
+		func internalGetMetafields(alias: String? = nil) -> [Storefront.Metafield?] {
+			return field(field: "metafields", aliasSuffix: alias) as! [Storefront.Metafield?]
 		}
 
 		/// The URL used for viewing the resource on the shop's Online Store. Returns 
@@ -378,16 +343,6 @@ extension Storefront {
 			return field(field: "updatedAt", aliasSuffix: alias) as! Date
 		}
 
-		/// The url pointing to the page accessible from the web. 
-		@available(*, deprecated, message:"Use `onlineStoreUrl` instead")
-		open var url: URL {
-			return internalGetUrl()
-		}
-
-		func internalGetUrl(alias: String? = nil) -> URL {
-			return field(field: "url", aliasSuffix: alias) as! URL
-		}
-
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
 			var response: [GraphQL.AbstractResponse] = []
 			objectMap.keys.forEach {
@@ -399,8 +354,12 @@ extension Storefront {
 					}
 
 					case "metafields":
-					response.append(internalGetMetafields())
-					response.append(contentsOf: internalGetMetafields().childResponseObjectMap())
+					internalGetMetafields().forEach {
+						if let value = $0 {
+							response.append(value)
+							response.append(contentsOf: value.childResponseObjectMap())
+						}
+					}
 
 					case "seo":
 					if let value = internalGetSeo() {

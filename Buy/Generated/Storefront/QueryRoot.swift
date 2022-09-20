@@ -50,9 +50,10 @@ extension Storefront {
 		///         - `blog_title`
 		///         - `created_at`
 		///         - `tag`
+		///         - `tag_not`
 		///         - `updated_at`
 		///        
-		///        See the detailed [search syntax](https://help.shopify.com/api/getting-started/search-syntax)
+		///        See the detailed [search syntax](https://shopify.dev/api/usage/search-syntax)
 		///        for more information about using filters.
 		///
 		@discardableResult
@@ -159,7 +160,7 @@ extension Storefront {
 		///         - `title`
 		///         - `updated_at`
 		///        
-		///        See the detailed [search syntax](https://help.shopify.com/api/getting-started/search-syntax)
+		///        See the detailed [search syntax](https://shopify.dev/api/usage/search-syntax)
 		///        for more information about using filters.
 		///
 		@discardableResult
@@ -285,7 +286,7 @@ extension Storefront {
 		///         - `title`
 		///         - `updated_at`
 		///        
-		///        See the detailed [search syntax](https://help.shopify.com/api/getting-started/search-syntax)
+		///        See the detailed [search syntax](https://shopify.dev/api/usage/search-syntax)
 		///        for more information about using filters.
 		///
 		@discardableResult
@@ -412,6 +413,26 @@ extension Storefront {
 			return self
 		}
 
+		/// A storefront menu. 
+		///
+		/// - parameters:
+		///     - handle: Returns a storefront menu by the specified handle.
+		///
+		@discardableResult
+		open func menu(alias: String? = nil, handle: String, _ subfields: (MenuQuery) -> Void) -> QueryRootQuery {
+			var args: [String] = []
+
+			args.append("handle:\(GraphQL.quoteString(input: handle))")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = MenuQuery()
+			subfields(subquery)
+
+			addField(field: "menu", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
 		/// Returns a specific node by ID. 
 		///
 		/// - parameters:
@@ -515,7 +536,7 @@ extension Storefront {
 		///         - `title`
 		///         - `updated_at`
 		///        
-		///        See the detailed [search syntax](https://help.shopify.com/api/getting-started/search-syntax)
+		///        See the detailed [search syntax](https://shopify.dev/api/usage/search-syntax)
 		///        for more information about using filters.
 		///
 		@discardableResult
@@ -686,12 +707,13 @@ extension Storefront {
 		///         - `created_at`
 		///         - `product_type`
 		///         - `tag`
+		///         - `tag_not`
 		///         - `title`
 		///         - `updated_at`
 		///         - `variants.price`
 		///         - `vendor`
 		///        
-		///        See the detailed [search syntax](https://help.shopify.com/api/getting-started/search-syntax)
+		///        See the detailed [search syntax](https://shopify.dev/api/usage/search-syntax)
 		///        for more information about using filters.
 		///
 		@discardableResult
@@ -753,6 +775,48 @@ extension Storefront {
 			subfields(subquery)
 
 			addField(field: "shop", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
+
+		/// A list of redirects for a shop. 
+		///
+		/// - parameters:
+		///     - first: Returns up to the first `n` elements from the list.
+		///     - after: Returns the elements that come after the specified cursor.
+		///     - last: Returns up to the last `n` elements from the list.
+		///     - before: Returns the elements that come before the specified cursor.
+		///     - reverse: Reverse the order of the underlying list.
+		///
+		@discardableResult
+		open func urlRedirects(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (UrlRedirectConnectionQuery) -> Void) -> QueryRootQuery {
+			var args: [String] = []
+
+			if let first = first {
+				args.append("first:\(first)")
+			}
+
+			if let after = after {
+				args.append("after:\(GraphQL.quoteString(input: after))")
+			}
+
+			if let last = last {
+				args.append("last:\(last)")
+			}
+
+			if let before = before {
+				args.append("before:\(GraphQL.quoteString(input: before))")
+			}
+
+			if let reverse = reverse {
+				args.append("reverse:\(reverse)")
+			}
+
+			let argsString: String? = args.isEmpty ? nil : "(\(args.joined(separator: ",")))"
+
+			let subquery = UrlRedirectConnectionQuery()
+			subfields(subquery)
+
+			addField(field: "urlRedirects", aliasSuffix: alias, args: argsString, subfields: subquery)
 			return self
 		}
 	}
@@ -836,6 +900,13 @@ extension Storefront {
 					throw SchemaViolationError(type: QueryRoot.self, field: fieldName, value: fieldValue)
 				}
 				return try LocationConnection(fields: value)
+
+				case "menu":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: QueryRoot.self, field: fieldName, value: fieldValue)
+				}
+				return try Menu(fields: value)
 
 				case "node":
 				if value is NSNull { return nil }
@@ -924,6 +995,12 @@ extension Storefront {
 					throw SchemaViolationError(type: QueryRoot.self, field: fieldName, value: fieldValue)
 				}
 				return try Shop(fields: value)
+
+				case "urlRedirects":
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: QueryRoot.self, field: fieldName, value: fieldValue)
+				}
+				return try UrlRedirectConnection(fields: value)
 
 				default:
 				throw SchemaViolationError(type: QueryRoot.self, field: fieldName, value: fieldValue)
@@ -1074,6 +1151,19 @@ extension Storefront {
 
 		func internalGetLocations(alias: String? = nil) -> Storefront.LocationConnection {
 			return field(field: "locations", aliasSuffix: alias) as! Storefront.LocationConnection
+		}
+
+		/// A storefront menu. 
+		open var menu: Storefront.Menu? {
+			return internalGetMenu()
+		}
+
+		open func aliasedMenu(alias: String) -> Storefront.Menu? {
+			return internalGetMenu(alias: alias)
+		}
+
+		func internalGetMenu(alias: String? = nil) -> Storefront.Menu? {
+			return field(field: "menu", aliasSuffix: alias) as! Storefront.Menu?
 		}
 
 		/// Returns a specific node by ID. 
@@ -1249,6 +1339,19 @@ extension Storefront {
 			return field(field: "shop", aliasSuffix: alias) as! Storefront.Shop
 		}
 
+		/// A list of redirects for a shop. 
+		open var urlRedirects: Storefront.UrlRedirectConnection {
+			return internalGetUrlRedirects()
+		}
+
+		open func aliasedUrlRedirects(alias: String) -> Storefront.UrlRedirectConnection {
+			return internalGetUrlRedirects(alias: alias)
+		}
+
+		func internalGetUrlRedirects(alias: String? = nil) -> Storefront.UrlRedirectConnection {
+			return field(field: "urlRedirects", aliasSuffix: alias) as! Storefront.UrlRedirectConnection
+		}
+
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
 			var response: [GraphQL.AbstractResponse] = []
 			objectMap.keys.forEach {
@@ -1308,6 +1411,12 @@ extension Storefront {
 					case "locations":
 					response.append(internalGetLocations())
 					response.append(contentsOf: internalGetLocations().childResponseObjectMap())
+
+					case "menu":
+					if let value = internalGetMenu() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
 
 					case "node":
 					if let value = internalGetNode() {
@@ -1380,6 +1489,10 @@ extension Storefront {
 					case "shop":
 					response.append(internalGetShop())
 					response.append(contentsOf: internalGetShop().childResponseObjectMap())
+
+					case "urlRedirects":
+					response.append(internalGetUrlRedirects())
+					response.append(contentsOf: internalGetUrlRedirects().childResponseObjectMap())
 
 					default:
 					break
