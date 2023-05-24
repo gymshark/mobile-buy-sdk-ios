@@ -1,5 +1,5 @@
 //
-//  CartLineConnection.swift
+//  MetafieldReferenceConnection.swift
 //  Buy
 //
 //  Created by Shopify.
@@ -27,24 +27,24 @@
 import Foundation
 
 extension Storefront {
-	/// An auto-generated type for paginating through multiple CartLines. 
-	open class CartLineConnectionQuery: GraphQL.AbstractQuery, GraphQLQuery {
-		public typealias Response = CartLineConnection
+	/// An auto-generated type for paginating through multiple MetafieldReferences. 
+	open class MetafieldReferenceConnectionQuery: GraphQL.AbstractQuery, GraphQLQuery {
+		public typealias Response = MetafieldReferenceConnection
 
 		/// A list of edges. 
 		@discardableResult
-		open func edges(alias: String? = nil, _ subfields: (CartLineEdgeQuery) -> Void) -> CartLineConnectionQuery {
-			let subquery = CartLineEdgeQuery()
+		open func edges(alias: String? = nil, _ subfields: (MetafieldReferenceEdgeQuery) -> Void) -> MetafieldReferenceConnectionQuery {
+			let subquery = MetafieldReferenceEdgeQuery()
 			subfields(subquery)
 
 			addField(field: "edges", aliasSuffix: alias, subfields: subquery)
 			return self
 		}
 
-		/// A list of the nodes contained in CartLineEdge. 
+		/// A list of the nodes contained in MetafieldReferenceEdge. 
 		@discardableResult
-		open func nodes(alias: String? = nil, _ subfields: (CartLineQuery) -> Void) -> CartLineConnectionQuery {
-			let subquery = CartLineQuery()
+		open func nodes(alias: String? = nil, _ subfields: (MetafieldReferenceQuery) -> Void) -> MetafieldReferenceConnectionQuery {
+			let subquery = MetafieldReferenceQuery()
 			subfields(subquery)
 
 			addField(field: "nodes", aliasSuffix: alias, subfields: subquery)
@@ -53,7 +53,7 @@ extension Storefront {
 
 		/// Information to aid in pagination. 
 		@discardableResult
-		open func pageInfo(alias: String? = nil, _ subfields: (PageInfoQuery) -> Void) -> CartLineConnectionQuery {
+		open func pageInfo(alias: String? = nil, _ subfields: (PageInfoQuery) -> Void) -> MetafieldReferenceConnectionQuery {
 			let subquery = PageInfoQuery()
 			subfields(subquery)
 
@@ -62,52 +62,52 @@ extension Storefront {
 		}
 	}
 
-	/// An auto-generated type for paginating through multiple CartLines. 
-	open class CartLineConnection: GraphQL.AbstractResponse, GraphQLObject {
-		public typealias Query = CartLineConnectionQuery
+	/// An auto-generated type for paginating through multiple MetafieldReferences. 
+	open class MetafieldReferenceConnection: GraphQL.AbstractResponse, GraphQLObject {
+		public typealias Query = MetafieldReferenceConnectionQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
 			let fieldValue = value
 			switch fieldName {
 				case "edges":
 				guard let value = value as? [[String: Any]] else {
-					throw SchemaViolationError(type: CartLineConnection.self, field: fieldName, value: fieldValue)
+					throw SchemaViolationError(type: MetafieldReferenceConnection.self, field: fieldName, value: fieldValue)
 				}
-				return try value.map { return try CartLineEdge(fields: $0) }
+				return try value.map { return try MetafieldReferenceEdge(fields: $0) }
 
 				case "nodes":
 				guard let value = value as? [[String: Any]] else {
-					throw SchemaViolationError(type: CartLineConnection.self, field: fieldName, value: fieldValue)
+					throw SchemaViolationError(type: MetafieldReferenceConnection.self, field: fieldName, value: fieldValue)
 				}
-				return try value.map { return try CartLine(fields: $0) }
+				return try value.map { return try UnknownMetafieldReference.create(fields: $0) }
 
 				case "pageInfo":
 				guard let value = value as? [String: Any] else {
-					throw SchemaViolationError(type: CartLineConnection.self, field: fieldName, value: fieldValue)
+					throw SchemaViolationError(type: MetafieldReferenceConnection.self, field: fieldName, value: fieldValue)
 				}
 				return try PageInfo(fields: value)
 
 				default:
-				throw SchemaViolationError(type: CartLineConnection.self, field: fieldName, value: fieldValue)
+				throw SchemaViolationError(type: MetafieldReferenceConnection.self, field: fieldName, value: fieldValue)
 			}
 		}
 
 		/// A list of edges. 
-		open var edges: [Storefront.CartLineEdge] {
+		open var edges: [Storefront.MetafieldReferenceEdge] {
 			return internalGetEdges()
 		}
 
-		func internalGetEdges(alias: String? = nil) -> [Storefront.CartLineEdge] {
-			return field(field: "edges", aliasSuffix: alias) as! [Storefront.CartLineEdge]
+		func internalGetEdges(alias: String? = nil) -> [Storefront.MetafieldReferenceEdge] {
+			return field(field: "edges", aliasSuffix: alias) as! [Storefront.MetafieldReferenceEdge]
 		}
 
-		/// A list of the nodes contained in CartLineEdge. 
-		open var nodes: [Storefront.CartLine] {
+		/// A list of the nodes contained in MetafieldReferenceEdge. 
+		open var nodes: [MetafieldReference] {
 			return internalGetNodes()
 		}
 
-		func internalGetNodes(alias: String? = nil) -> [Storefront.CartLine] {
-			return field(field: "nodes", aliasSuffix: alias) as! [Storefront.CartLine]
+		func internalGetNodes(alias: String? = nil) -> [MetafieldReference] {
+			return field(field: "nodes", aliasSuffix: alias) as! [MetafieldReference]
 		}
 
 		/// Information to aid in pagination. 
@@ -131,8 +131,8 @@ extension Storefront {
 
 					case "nodes":
 					internalGetNodes().forEach {
-						response.append($0)
-						response.append(contentsOf: $0.childResponseObjectMap())
+						response.append(($0 as! GraphQL.AbstractResponse))
+						response.append(contentsOf: ($0 as! GraphQL.AbstractResponse).childResponseObjectMap())
 					}
 
 					case "pageInfo":
