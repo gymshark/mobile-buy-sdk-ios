@@ -61,12 +61,14 @@ extension Storefront {
 
 		/// Updates customer information associated with a cart. Buyer identity is used 
 		/// to determine [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-checkout) 
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing) 
 		/// and should match the customer's shipping address. 
 		///
 		/// - parameters:
 		///     - cartId: The ID of the cart.
-		///     - buyerIdentity: The customer associated with the cart. Used to determine [international pricing](https://shopify.dev/api/examples/international-pricing#create-a-checkout). Buyer identity should match the customer's shipping address.
+		///     - buyerIdentity: The customer associated with the cart. Used to determine
+		///        [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
+		///        Buyer identity should match the customer's shipping address.
 		///
 		@discardableResult
 		open func cartBuyerIdentityUpdate(alias: String? = nil, cartId: GraphQL.ID, buyerIdentity: CartBuyerIdentityInput, _ subfields: (CartBuyerIdentityUpdatePayloadQuery) -> Void) -> MutationQuery {
@@ -201,6 +203,48 @@ extension Storefront {
 			return self
 		}
 
+		/// Deletes a cart metafield. 
+		///
+		/// - parameters:
+		///     - input: The input fields used to delete a cart metafield.
+		///
+		@discardableResult
+		open func cartMetafieldDelete(alias: String? = nil, input: CartMetafieldDeleteInput, _ subfields: (CartMetafieldDeletePayloadQuery) -> Void) -> MutationQuery {
+			var args: [String] = []
+
+			args.append("input:\(input.serialize())")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = CartMetafieldDeletePayloadQuery()
+			subfields(subquery)
+
+			addField(field: "cartMetafieldDelete", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// Sets cart metafield values. Cart metafield values will be set regardless if 
+		/// they were previously created or not. Allows a maximum of 25 cart metafields 
+		/// to be set at a time. 
+		///
+		/// - parameters:
+		///     - metafields: The list of Cart metafield values to set. Maximum of 25.
+		///
+		@discardableResult
+		open func cartMetafieldsSet(alias: String? = nil, metafields: [CartMetafieldsSetInput], _ subfields: (CartMetafieldsSetPayloadQuery) -> Void) -> MutationQuery {
+			var args: [String] = []
+
+			args.append("metafields:[\(metafields.map{ "\($0.serialize())" }.joined(separator: ","))]")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = CartMetafieldsSetPayloadQuery()
+			subfields(subquery)
+
+			addField(field: "cartMetafieldsSet", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
 		/// Updates the note on the cart. 
 		///
 		/// - parameters:
@@ -223,6 +267,76 @@ extension Storefront {
 			subfields(subquery)
 
 			addField(field: "cartNoteUpdate", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// Update the customer's payment method that will be used to checkout. 
+		///
+		/// - parameters:
+		///     - cartId: The ID of the cart.
+		///     - payment: The payment information for the cart that will be used at checkout.
+		///
+		@discardableResult
+		open func cartPaymentUpdate(alias: String? = nil, cartId: GraphQL.ID, payment: CartPaymentInput, _ subfields: (CartPaymentUpdatePayloadQuery) -> Void) -> MutationQuery {
+			var args: [String] = []
+
+			args.append("cartId:\(GraphQL.quoteString(input: "\(cartId.rawValue)"))")
+
+			args.append("payment:\(payment.serialize())")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = CartPaymentUpdatePayloadQuery()
+			subfields(subquery)
+
+			addField(field: "cartPaymentUpdate", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// Update the selected delivery options for a delivery group. 
+		///
+		/// - parameters:
+		///     - cartId: The ID of the cart.
+		///     - selectedDeliveryOptions: The selected delivery options.
+		///
+		@discardableResult
+		open func cartSelectedDeliveryOptionsUpdate(alias: String? = nil, cartId: GraphQL.ID, selectedDeliveryOptions: [CartSelectedDeliveryOptionInput], _ subfields: (CartSelectedDeliveryOptionsUpdatePayloadQuery) -> Void) -> MutationQuery {
+			var args: [String] = []
+
+			args.append("cartId:\(GraphQL.quoteString(input: "\(cartId.rawValue)"))")
+
+			args.append("selectedDeliveryOptions:[\(selectedDeliveryOptions.map{ "\($0.serialize())" }.joined(separator: ","))]")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = CartSelectedDeliveryOptionsUpdatePayloadQuery()
+			subfields(subquery)
+
+			addField(field: "cartSelectedDeliveryOptionsUpdate", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// Submit the cart for checkout completion. 
+		///
+		/// - parameters:
+		///     - cartId: The ID of the cart.
+		///     - attemptToken: The attemptToken is used to guarantee an idempotent result.
+		///        If more than one call uses the same attemptToken within a short period of time, only one will be accepted.
+		///
+		@discardableResult
+		open func cartSubmitForCompletion(alias: String? = nil, cartId: GraphQL.ID, attemptToken: String, _ subfields: (CartSubmitForCompletionPayloadQuery) -> Void) -> MutationQuery {
+			var args: [String] = []
+
+			args.append("cartId:\(GraphQL.quoteString(input: "\(cartId.rawValue)"))")
+
+			args.append("attemptToken:\(GraphQL.quoteString(input: attemptToken))")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = CartSubmitForCompletionPayloadQuery()
+			subfields(subquery)
+
+			addField(field: "cartSubmitForCompletion", aliasSuffix: alias, args: argsString, subfields: subquery)
 			return self
 		}
 
@@ -659,13 +773,14 @@ extension Storefront {
 			return self
 		}
 
-		/// Creates a customer access token using a multipass token instead of email 
-		/// and password. A customer record is created if customer does not exist. If a 
-		/// customer record already exists but the record is disabled, then it's 
-		/// enabled. 
+		/// Creates a customer access token using a [multipass 
+		/// token](https://shopify.dev/api/multipass) instead of email and password. A 
+		/// customer record is created if the customer doesn't exist. If a customer 
+		/// record already exists but the record is disabled, then the customer record 
+		/// is enabled. 
 		///
 		/// - parameters:
-		///     - multipassToken: A valid multipass token to be authenticated.
+		///     - multipassToken: A valid [multipass token](https://shopify.dev/api/multipass) to be authenticated.
 		///
 		@discardableResult
 		open func customerAccessTokenCreateWithMultipass(alias: String? = nil, multipassToken: String, _ subfields: (CustomerAccessTokenCreateWithMultipassPayloadQuery) -> Void) -> MutationQuery {
@@ -886,8 +1001,17 @@ extension Storefront {
 			return self
 		}
 
-		/// Sends a reset password email to the customer, as the first step in the 
-		/// reset password process. 
+		/// Sends a reset password email to the customer. The reset password email 
+		/// contains a reset password URL and token that you can pass to the 
+		/// [`customerResetByUrl`](https://shopify.dev/api/storefront/latest/mutations/customerResetByUrl) 
+		/// or 
+		/// [`customerReset`](https://shopify.dev/api/storefront/latest/mutations/customerReset) 
+		/// mutation to reset the customer password. This mutation is throttled by IP. 
+		/// With authenticated access, you can provide a 
+		/// [`Shopify-Storefront-Buyer-IP`](https://shopify.dev/api/usage/authentication#optional-ip-header) 
+		/// instead of the request IP. Make sure that the value provided to 
+		/// `Shopify-Storefront-Buyer-IP` is trusted. Unthrottled access to this 
+		/// mutation presents a security risk. 
 		///
 		/// - parameters:
 		///     - email: The email address of the customer to recover.
@@ -907,7 +1031,10 @@ extension Storefront {
 			return self
 		}
 
-		/// Resets a customer’s password with a token received from `CustomerRecover`. 
+		/// "Resets a customer’s password with the token received from a reset password 
+		/// email. You can send a reset password email with the 
+		/// [`customerRecover`](https://shopify.dev/api/storefront/latest/mutations/customerRecover) 
+		/// mutation." 
 		///
 		/// - parameters:
 		///     - id: Specifies the customer to reset.
@@ -930,8 +1057,10 @@ extension Storefront {
 			return self
 		}
 
-		/// Resets a customer’s password with the reset password url received from 
-		/// `CustomerRecover`. 
+		/// "Resets a customer’s password with the reset password URL received from a 
+		/// reset password email. You can send a reset password email with the 
+		/// [`customerRecover`](https://shopify.dev/api/storefront/latest/mutations/customerRecover) 
+		/// mutation." 
 		///
 		/// - parameters:
 		///     - resetUrl: The customer's reset password url.
@@ -1035,12 +1164,47 @@ extension Storefront {
 				}
 				return try CartLinesUpdatePayload(fields: value)
 
+				case "cartMetafieldDelete":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
+				}
+				return try CartMetafieldDeletePayload(fields: value)
+
+				case "cartMetafieldsSet":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
+				}
+				return try CartMetafieldsSetPayload(fields: value)
+
 				case "cartNoteUpdate":
 				if value is NSNull { return nil }
 				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
 				}
 				return try CartNoteUpdatePayload(fields: value)
+
+				case "cartPaymentUpdate":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
+				}
+				return try CartPaymentUpdatePayload(fields: value)
+
+				case "cartSelectedDeliveryOptionsUpdate":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
+				}
+				return try CartSelectedDeliveryOptionsUpdatePayload(fields: value)
+
+				case "cartSubmitForCompletion":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Mutation.self, field: fieldName, value: fieldValue)
+				}
+				return try CartSubmitForCompletionPayload(fields: value)
 
 				case "checkoutAttributesUpdateV2":
 				if value is NSNull { return nil }
@@ -1293,7 +1457,7 @@ extension Storefront {
 
 		/// Updates customer information associated with a cart. Buyer identity is used 
 		/// to determine [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-checkout) 
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing) 
 		/// and should match the customer's shipping address. 
 		open var cartBuyerIdentityUpdate: Storefront.CartBuyerIdentityUpdatePayload? {
 			return internalGetCartBuyerIdentityUpdate()
@@ -1372,6 +1536,34 @@ extension Storefront {
 			return field(field: "cartLinesUpdate", aliasSuffix: alias) as! Storefront.CartLinesUpdatePayload?
 		}
 
+		/// Deletes a cart metafield. 
+		open var cartMetafieldDelete: Storefront.CartMetafieldDeletePayload? {
+			return internalGetCartMetafieldDelete()
+		}
+
+		open func aliasedCartMetafieldDelete(alias: String) -> Storefront.CartMetafieldDeletePayload? {
+			return internalGetCartMetafieldDelete(alias: alias)
+		}
+
+		func internalGetCartMetafieldDelete(alias: String? = nil) -> Storefront.CartMetafieldDeletePayload? {
+			return field(field: "cartMetafieldDelete", aliasSuffix: alias) as! Storefront.CartMetafieldDeletePayload?
+		}
+
+		/// Sets cart metafield values. Cart metafield values will be set regardless if 
+		/// they were previously created or not. Allows a maximum of 25 cart metafields 
+		/// to be set at a time. 
+		open var cartMetafieldsSet: Storefront.CartMetafieldsSetPayload? {
+			return internalGetCartMetafieldsSet()
+		}
+
+		open func aliasedCartMetafieldsSet(alias: String) -> Storefront.CartMetafieldsSetPayload? {
+			return internalGetCartMetafieldsSet(alias: alias)
+		}
+
+		func internalGetCartMetafieldsSet(alias: String? = nil) -> Storefront.CartMetafieldsSetPayload? {
+			return field(field: "cartMetafieldsSet", aliasSuffix: alias) as! Storefront.CartMetafieldsSetPayload?
+		}
+
 		/// Updates the note on the cart. 
 		open var cartNoteUpdate: Storefront.CartNoteUpdatePayload? {
 			return internalGetCartNoteUpdate()
@@ -1383,6 +1575,45 @@ extension Storefront {
 
 		func internalGetCartNoteUpdate(alias: String? = nil) -> Storefront.CartNoteUpdatePayload? {
 			return field(field: "cartNoteUpdate", aliasSuffix: alias) as! Storefront.CartNoteUpdatePayload?
+		}
+
+		/// Update the customer's payment method that will be used to checkout. 
+		open var cartPaymentUpdate: Storefront.CartPaymentUpdatePayload? {
+			return internalGetCartPaymentUpdate()
+		}
+
+		open func aliasedCartPaymentUpdate(alias: String) -> Storefront.CartPaymentUpdatePayload? {
+			return internalGetCartPaymentUpdate(alias: alias)
+		}
+
+		func internalGetCartPaymentUpdate(alias: String? = nil) -> Storefront.CartPaymentUpdatePayload? {
+			return field(field: "cartPaymentUpdate", aliasSuffix: alias) as! Storefront.CartPaymentUpdatePayload?
+		}
+
+		/// Update the selected delivery options for a delivery group. 
+		open var cartSelectedDeliveryOptionsUpdate: Storefront.CartSelectedDeliveryOptionsUpdatePayload? {
+			return internalGetCartSelectedDeliveryOptionsUpdate()
+		}
+
+		open func aliasedCartSelectedDeliveryOptionsUpdate(alias: String) -> Storefront.CartSelectedDeliveryOptionsUpdatePayload? {
+			return internalGetCartSelectedDeliveryOptionsUpdate(alias: alias)
+		}
+
+		func internalGetCartSelectedDeliveryOptionsUpdate(alias: String? = nil) -> Storefront.CartSelectedDeliveryOptionsUpdatePayload? {
+			return field(field: "cartSelectedDeliveryOptionsUpdate", aliasSuffix: alias) as! Storefront.CartSelectedDeliveryOptionsUpdatePayload?
+		}
+
+		/// Submit the cart for checkout completion. 
+		open var cartSubmitForCompletion: Storefront.CartSubmitForCompletionPayload? {
+			return internalGetCartSubmitForCompletion()
+		}
+
+		open func aliasedCartSubmitForCompletion(alias: String) -> Storefront.CartSubmitForCompletionPayload? {
+			return internalGetCartSubmitForCompletion(alias: alias)
+		}
+
+		func internalGetCartSubmitForCompletion(alias: String? = nil) -> Storefront.CartSubmitForCompletionPayload? {
+			return field(field: "cartSubmitForCompletion", aliasSuffix: alias) as! Storefront.CartSubmitForCompletionPayload?
 		}
 
 		/// Updates the attributes of a checkout if `allowPartialAddresses` is `true`. 
@@ -1638,10 +1869,11 @@ extension Storefront {
 			return field(field: "customerAccessTokenCreate", aliasSuffix: alias) as! Storefront.CustomerAccessTokenCreatePayload?
 		}
 
-		/// Creates a customer access token using a multipass token instead of email 
-		/// and password. A customer record is created if customer does not exist. If a 
-		/// customer record already exists but the record is disabled, then it's 
-		/// enabled. 
+		/// Creates a customer access token using a [multipass 
+		/// token](https://shopify.dev/api/multipass) instead of email and password. A 
+		/// customer record is created if the customer doesn't exist. If a customer 
+		/// record already exists but the record is disabled, then the customer record 
+		/// is enabled. 
 		open var customerAccessTokenCreateWithMultipass: Storefront.CustomerAccessTokenCreateWithMultipassPayload? {
 			return internalGetCustomerAccessTokenCreateWithMultipass()
 		}
@@ -1774,8 +2006,17 @@ extension Storefront {
 			return field(field: "customerDefaultAddressUpdate", aliasSuffix: alias) as! Storefront.CustomerDefaultAddressUpdatePayload?
 		}
 
-		/// Sends a reset password email to the customer, as the first step in the 
-		/// reset password process. 
+		/// Sends a reset password email to the customer. The reset password email 
+		/// contains a reset password URL and token that you can pass to the 
+		/// [`customerResetByUrl`](https://shopify.dev/api/storefront/latest/mutations/customerResetByUrl) 
+		/// or 
+		/// [`customerReset`](https://shopify.dev/api/storefront/latest/mutations/customerReset) 
+		/// mutation to reset the customer password. This mutation is throttled by IP. 
+		/// With authenticated access, you can provide a 
+		/// [`Shopify-Storefront-Buyer-IP`](https://shopify.dev/api/usage/authentication#optional-ip-header) 
+		/// instead of the request IP. Make sure that the value provided to 
+		/// `Shopify-Storefront-Buyer-IP` is trusted. Unthrottled access to this 
+		/// mutation presents a security risk. 
 		open var customerRecover: Storefront.CustomerRecoverPayload? {
 			return internalGetCustomerRecover()
 		}
@@ -1788,7 +2029,10 @@ extension Storefront {
 			return field(field: "customerRecover", aliasSuffix: alias) as! Storefront.CustomerRecoverPayload?
 		}
 
-		/// Resets a customer’s password with a token received from `CustomerRecover`. 
+		/// "Resets a customer’s password with the token received from a reset password 
+		/// email. You can send a reset password email with the 
+		/// [`customerRecover`](https://shopify.dev/api/storefront/latest/mutations/customerRecover) 
+		/// mutation." 
 		open var customerReset: Storefront.CustomerResetPayload? {
 			return internalGetCustomerReset()
 		}
@@ -1801,8 +2045,10 @@ extension Storefront {
 			return field(field: "customerReset", aliasSuffix: alias) as! Storefront.CustomerResetPayload?
 		}
 
-		/// Resets a customer’s password with the reset password url received from 
-		/// `CustomerRecover`. 
+		/// "Resets a customer’s password with the reset password URL received from a 
+		/// reset password email. You can send a reset password email with the 
+		/// [`customerRecover`](https://shopify.dev/api/storefront/latest/mutations/customerRecover) 
+		/// mutation." 
 		open var customerResetByUrl: Storefront.CustomerResetByUrlPayload? {
 			return internalGetCustomerResetByUrl()
 		}
@@ -1874,8 +2120,38 @@ extension Storefront {
 						response.append(contentsOf: value.childResponseObjectMap())
 					}
 
+					case "cartMetafieldDelete":
+					if let value = internalGetCartMetafieldDelete() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "cartMetafieldsSet":
+					if let value = internalGetCartMetafieldsSet() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
 					case "cartNoteUpdate":
 					if let value = internalGetCartNoteUpdate() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "cartPaymentUpdate":
+					if let value = internalGetCartPaymentUpdate() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "cartSelectedDeliveryOptionsUpdate":
+					if let value = internalGetCartSelectedDeliveryOptionsUpdate() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "cartSubmitForCompletion":
+					if let value = internalGetCartSubmitForCompletion() {
 						response.append(value)
 						response.append(contentsOf: value.childResponseObjectMap())
 					}

@@ -1,5 +1,5 @@
 //
-//  CartLineEdge.swift
+//  MetaobjectEdge.swift
 //  Buy
 //
 //  Created by Shopify.
@@ -27,22 +27,22 @@
 import Foundation
 
 extension Storefront {
-	/// An auto-generated type which holds one CartLine and a cursor during 
+	/// An auto-generated type which holds one Metaobject and a cursor during 
 	/// pagination. 
-	open class CartLineEdgeQuery: GraphQL.AbstractQuery, GraphQLQuery {
-		public typealias Response = CartLineEdge
+	open class MetaobjectEdgeQuery: GraphQL.AbstractQuery, GraphQLQuery {
+		public typealias Response = MetaobjectEdge
 
 		/// A cursor for use in pagination. 
 		@discardableResult
-		open func cursor(alias: String? = nil) -> CartLineEdgeQuery {
+		open func cursor(alias: String? = nil) -> MetaobjectEdgeQuery {
 			addField(field: "cursor", aliasSuffix: alias)
 			return self
 		}
 
-		/// The item at the end of CartLineEdge. 
+		/// The item at the end of MetaobjectEdge. 
 		@discardableResult
-		open func node(alias: String? = nil, _ subfields: (CartLineQuery) -> Void) -> CartLineEdgeQuery {
-			let subquery = CartLineQuery()
+		open func node(alias: String? = nil, _ subfields: (MetaobjectQuery) -> Void) -> MetaobjectEdgeQuery {
+			let subquery = MetaobjectQuery()
 			subfields(subquery)
 
 			addField(field: "node", aliasSuffix: alias, subfields: subquery)
@@ -50,28 +50,28 @@ extension Storefront {
 		}
 	}
 
-	/// An auto-generated type which holds one CartLine and a cursor during 
+	/// An auto-generated type which holds one Metaobject and a cursor during 
 	/// pagination. 
-	open class CartLineEdge: GraphQL.AbstractResponse, GraphQLObject {
-		public typealias Query = CartLineEdgeQuery
+	open class MetaobjectEdge: GraphQL.AbstractResponse, GraphQLObject {
+		public typealias Query = MetaobjectEdgeQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
 			let fieldValue = value
 			switch fieldName {
 				case "cursor":
 				guard let value = value as? String else {
-					throw SchemaViolationError(type: CartLineEdge.self, field: fieldName, value: fieldValue)
+					throw SchemaViolationError(type: MetaobjectEdge.self, field: fieldName, value: fieldValue)
 				}
 				return value
 
 				case "node":
 				guard let value = value as? [String: Any] else {
-					throw SchemaViolationError(type: CartLineEdge.self, field: fieldName, value: fieldValue)
+					throw SchemaViolationError(type: MetaobjectEdge.self, field: fieldName, value: fieldValue)
 				}
-				return try CartLine(fields: value)
+				return try Metaobject(fields: value)
 
 				default:
-				throw SchemaViolationError(type: CartLineEdge.self, field: fieldName, value: fieldValue)
+				throw SchemaViolationError(type: MetaobjectEdge.self, field: fieldName, value: fieldValue)
 			}
 		}
 
@@ -84,13 +84,13 @@ extension Storefront {
 			return field(field: "cursor", aliasSuffix: alias) as! String
 		}
 
-		/// The item at the end of CartLineEdge. 
-		open var node: Storefront.CartLine {
+		/// The item at the end of MetaobjectEdge. 
+		open var node: Storefront.Metaobject {
 			return internalGetNode()
 		}
 
-		func internalGetNode(alias: String? = nil) -> Storefront.CartLine {
-			return field(field: "node", aliasSuffix: alias) as! Storefront.CartLine
+		func internalGetNode(alias: String? = nil) -> Storefront.Metaobject {
+			return field(field: "node", aliasSuffix: alias) as! Storefront.Metaobject
 		}
 
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {

@@ -86,7 +86,7 @@ extension Storefront {
 		/// The estimated cost of the merchandise that the buyer will pay for at 
 		/// checkout. The estimated costs are subject to change and changes will be 
 		/// reflected at checkout. 
-		@available(*, deprecated, message:"Use `cost` instead")
+		@available(*, deprecated, message:"Use `cost` instead.")
 		@discardableResult
 		open func estimatedCost(alias: String? = nil, _ subfields: (CartLineEstimatedCostQuery) -> Void) -> CartLineQuery {
 			let subquery = CartLineEstimatedCostQuery()
@@ -133,7 +133,7 @@ extension Storefront {
 	}
 
 	/// Represents information about the merchandise in the cart. 
-	open class CartLine: GraphQL.AbstractResponse, GraphQLObject, Node {
+	open class CartLine: GraphQL.AbstractResponse, GraphQLObject, BaseCartLine, Node {
 		public typealias Query = CartLineQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
@@ -245,7 +245,7 @@ extension Storefront {
 		/// The estimated cost of the merchandise that the buyer will pay for at 
 		/// checkout. The estimated costs are subject to change and changes will be 
 		/// reflected at checkout. 
-		@available(*, deprecated, message:"Use `cost` instead")
+		@available(*, deprecated, message:"Use `cost` instead.")
 		open var estimatedCost: Storefront.CartLineEstimatedCost {
 			return internalGetEstimatedCost()
 		}

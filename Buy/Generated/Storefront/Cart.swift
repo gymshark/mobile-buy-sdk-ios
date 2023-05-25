@@ -28,9 +28,9 @@ import Foundation
 
 extension Storefront {
 	/// A cart represents the merchandise that a buyer intends to purchase, and the 
-	/// estimated cost associated with the cart. To learn how to interact with a 
-	/// cart during a customer's session, refer to [Manage a cart with the 
-	/// Storefront API](https://shopify.dev/api/examples/cart). 
+	/// estimated cost associated with the cart. Learn how to [interact with a 
+	/// cart](https://shopify.dev/custom-storefronts/internationalization/international-pricing) 
+	/// during a customer's session. 
 	open class CartQuery: GraphQL.AbstractQuery, GraphQLQuery {
 		public typealias Response = Cart
 
@@ -85,7 +85,7 @@ extension Storefront {
 		/// The estimated costs that the buyer will pay at checkout. The costs are 
 		/// subject to change and changes will be reflected at checkout. The `cost` 
 		/// field uses the `buyerIdentity` field to determine [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-cart). 
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). 
 		@discardableResult
 		open func cost(alias: String? = nil, _ subfields: (CartCostQuery) -> Void) -> CartQuery {
 			let subquery = CartCostQuery()
@@ -102,8 +102,9 @@ extension Storefront {
 			return self
 		}
 
-		/// The delivery groups available for the cart, based on the default address of 
-		/// the logged-in customer. 
+		/// The delivery groups available for the cart, based on the buyer identity 
+		/// default delivery address preference or the default address of the logged-in 
+		/// customer. 
 		///
 		/// - parameters:
 		///     - first: Returns up to the first `n` elements from the list.
@@ -169,8 +170,8 @@ extension Storefront {
 		/// costs are subject to change and changes will be reflected at checkout. The 
 		/// `estimatedCost` field uses the `buyerIdentity` field to determine 
 		/// [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-cart). 
-		@available(*, deprecated, message:"Use `cost` instead")
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). 
+		@available(*, deprecated, message:"Use `cost` instead.")
 		@discardableResult
 		open func estimatedCost(alias: String? = nil, _ subfields: (CartEstimatedCostQuery) -> Void) -> CartQuery {
 			let subquery = CartEstimatedCostQuery()
@@ -198,7 +199,7 @@ extension Storefront {
 		///     - reverse: Reverse the order of the underlying list.
 		///
 		@discardableResult
-		open func lines(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (CartLineConnectionQuery) -> Void) -> CartQuery {
+		open func lines(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (BaseCartLineConnectionQuery) -> Void) -> CartQuery {
 			var args: [String] = []
 
 			if let first = first {
@@ -223,10 +224,54 @@ extension Storefront {
 
 			let argsString: String? = args.isEmpty ? nil : "(\(args.joined(separator: ",")))"
 
-			let subquery = CartLineConnectionQuery()
+			let subquery = BaseCartLineConnectionQuery()
 			subfields(subquery)
 
 			addField(field: "lines", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// Returns a metafield found by namespace and key. 
+		///
+		/// - parameters:
+		///     - namespace: A container for a set of metafields.
+		///     - key: The identifier for the metafield.
+		///
+		@discardableResult
+		open func metafield(alias: String? = nil, namespace: String, key: String, _ subfields: (MetafieldQuery) -> Void) -> CartQuery {
+			var args: [String] = []
+
+			args.append("namespace:\(GraphQL.quoteString(input: namespace))")
+
+			args.append("key:\(GraphQL.quoteString(input: key))")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = MetafieldQuery()
+			subfields(subquery)
+
+			addField(field: "metafield", aliasSuffix: alias, args: argsString, subfields: subquery)
+			return self
+		}
+
+		/// The metafields associated with the resource matching the supplied list of 
+		/// namespaces and keys. 
+		///
+		/// - parameters:
+		///     - identifiers: The list of metafields to retrieve by namespace and key.
+		///
+		@discardableResult
+		open func metafields(alias: String? = nil, identifiers: [HasMetafieldsIdentifier], _ subfields: (MetafieldQuery) -> Void) -> CartQuery {
+			var args: [String] = []
+
+			args.append("identifiers:[\(identifiers.map{ "\($0.serialize())" }.joined(separator: ","))]")
+
+			let argsString = "(\(args.joined(separator: ",")))"
+
+			let subquery = MetafieldQuery()
+			subfields(subquery)
+
+			addField(field: "metafields", aliasSuffix: alias, args: argsString, subfields: subquery)
 			return self
 		}
 
@@ -254,10 +299,10 @@ extension Storefront {
 	}
 
 	/// A cart represents the merchandise that a buyer intends to purchase, and the 
-	/// estimated cost associated with the cart. To learn how to interact with a 
-	/// cart during a customer's session, refer to [Manage a cart with the 
-	/// Storefront API](https://shopify.dev/api/examples/cart). 
-	open class Cart: GraphQL.AbstractResponse, GraphQLObject, Node {
+	/// estimated cost associated with the cart. Learn how to [interact with a 
+	/// cart](https://shopify.dev/custom-storefronts/internationalization/international-pricing) 
+	/// during a customer's session. 
+	open class Cart: GraphQL.AbstractResponse, GraphQLObject, HasMetafields, MetafieldParentResource, Node {
 		public typealias Query = CartQuery
 
 		internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
@@ -334,7 +379,24 @@ extension Storefront {
 				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: Cart.self, field: fieldName, value: fieldValue)
 				}
-				return try CartLineConnection(fields: value)
+				return try BaseCartLineConnection(fields: value)
+
+				case "metafield":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Cart.self, field: fieldName, value: fieldValue)
+				}
+				return try Metafield(fields: value)
+
+				case "metafields":
+				guard let value = value as? [Any] else {
+					throw SchemaViolationError(type: Cart.self, field: fieldName, value: fieldValue)
+				}
+				return try value.map { if $0 is NSNull { return nil }
+				guard let value = $0 as? [String: Any] else {
+					throw SchemaViolationError(type: Cart.self, field: fieldName, value: fieldValue)
+				}
+				return try Metafield(fields: value) } as [Any?]
 
 				case "note":
 				if value is NSNull { return nil }
@@ -404,7 +466,7 @@ extension Storefront {
 		/// The estimated costs that the buyer will pay at checkout. The costs are 
 		/// subject to change and changes will be reflected at checkout. The `cost` 
 		/// field uses the `buyerIdentity` field to determine [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-cart). 
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). 
 		open var cost: Storefront.CartCost {
 			return internalGetCost()
 		}
@@ -422,8 +484,9 @@ extension Storefront {
 			return field(field: "createdAt", aliasSuffix: alias) as! Date
 		}
 
-		/// The delivery groups available for the cart, based on the default address of 
-		/// the logged-in customer. 
+		/// The delivery groups available for the cart, based on the buyer identity 
+		/// default delivery address preference or the default address of the logged-in 
+		/// customer. 
 		open var deliveryGroups: Storefront.CartDeliveryGroupConnection {
 			return internalGetDeliveryGroups()
 		}
@@ -458,8 +521,8 @@ extension Storefront {
 		/// costs are subject to change and changes will be reflected at checkout. The 
 		/// `estimatedCost` field uses the `buyerIdentity` field to determine 
 		/// [international 
-		/// pricing](https://shopify.dev/api/examples/international-pricing#create-a-cart). 
-		@available(*, deprecated, message:"Use `cost` instead")
+		/// pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). 
+		@available(*, deprecated, message:"Use `cost` instead.")
 		open var estimatedCost: Storefront.CartEstimatedCost {
 			return internalGetEstimatedCost()
 		}
@@ -479,16 +542,43 @@ extension Storefront {
 
 		/// A list of lines containing information about the items the customer intends 
 		/// to purchase. 
-		open var lines: Storefront.CartLineConnection {
+		open var lines: Storefront.BaseCartLineConnection {
 			return internalGetLines()
 		}
 
-		open func aliasedLines(alias: String) -> Storefront.CartLineConnection {
+		open func aliasedLines(alias: String) -> Storefront.BaseCartLineConnection {
 			return internalGetLines(alias: alias)
 		}
 
-		func internalGetLines(alias: String? = nil) -> Storefront.CartLineConnection {
-			return field(field: "lines", aliasSuffix: alias) as! Storefront.CartLineConnection
+		func internalGetLines(alias: String? = nil) -> Storefront.BaseCartLineConnection {
+			return field(field: "lines", aliasSuffix: alias) as! Storefront.BaseCartLineConnection
+		}
+
+		/// Returns a metafield found by namespace and key. 
+		open var metafield: Storefront.Metafield? {
+			return internalGetMetafield()
+		}
+
+		open func aliasedMetafield(alias: String) -> Storefront.Metafield? {
+			return internalGetMetafield(alias: alias)
+		}
+
+		func internalGetMetafield(alias: String? = nil) -> Storefront.Metafield? {
+			return field(field: "metafield", aliasSuffix: alias) as! Storefront.Metafield?
+		}
+
+		/// The metafields associated with the resource matching the supplied list of 
+		/// namespaces and keys. 
+		open var metafields: [Storefront.Metafield?] {
+			return internalGetMetafields()
+		}
+
+		open func aliasedMetafields(alias: String) -> [Storefront.Metafield?] {
+			return internalGetMetafields(alias: alias)
+		}
+
+		func internalGetMetafields(alias: String? = nil) -> [Storefront.Metafield?] {
+			return field(field: "metafields", aliasSuffix: alias) as! [Storefront.Metafield?]
 		}
 
 		/// A note that is associated with the cart. For example, the note can be a 
@@ -566,6 +656,20 @@ extension Storefront {
 					case "lines":
 					response.append(internalGetLines())
 					response.append(contentsOf: internalGetLines().childResponseObjectMap())
+
+					case "metafield":
+					if let value = internalGetMetafield() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "metafields":
+					internalGetMetafields().forEach {
+						if let value = $0 {
+							response.append(value)
+							response.append(contentsOf: value.childResponseObjectMap())
+						}
+					}
 
 					default:
 					break
