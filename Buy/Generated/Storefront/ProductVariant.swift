@@ -48,15 +48,18 @@ extension Storefront {
 
 		/// The compare at price of the variant. This can be used to mark a variant as 
 		/// on sale, when `compareAtPrice` is higher than `price`. 
-		@available(*, deprecated, message:"Use `compareAtPriceV2` instead")
 		@discardableResult
-		open func compareAtPrice(alias: String? = nil) -> ProductVariantQuery {
-			addField(field: "compareAtPrice", aliasSuffix: alias)
+		open func compareAtPrice(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> ProductVariantQuery {
+			let subquery = MoneyV2Query()
+			subfields(subquery)
+
+			addField(field: "compareAtPrice", aliasSuffix: alias, subfields: subquery)
 			return self
 		}
 
 		/// The compare at price of the variant. This can be used to mark a variant as 
 		/// on sale, when `compareAtPriceV2` is higher than `priceV2`. 
+		@available(*, deprecated, message:"Use `compareAtPrice` instead.")
 		@discardableResult
 		open func compareAtPriceV2(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> ProductVariantQuery {
 			let subquery = MoneyV2Query()
@@ -137,14 +140,17 @@ extension Storefront {
 		}
 
 		/// The product variant’s price. 
-		@available(*, deprecated, message:"Use `priceV2` instead")
 		@discardableResult
-		open func price(alias: String? = nil) -> ProductVariantQuery {
-			addField(field: "price", aliasSuffix: alias)
+		open func price(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> ProductVariantQuery {
+			let subquery = MoneyV2Query()
+			subfields(subquery)
+
+			addField(field: "price", aliasSuffix: alias, subfields: subquery)
 			return self
 		}
 
 		/// The product variant’s price. 
+		@available(*, deprecated, message:"Use `price` instead.")
 		@discardableResult
 		open func priceV2(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> ProductVariantQuery {
 			let subquery = MoneyV2Query()
@@ -248,9 +254,10 @@ extension Storefront {
 		///     - last: Returns up to the last `n` elements from the list.
 		///     - before: Returns the elements that come before the specified cursor.
 		///     - reverse: Reverse the order of the underlying list.
+		///     - near: Used to sort results based on proximity to the provided location.
 		///
 		@discardableResult
-		open func storeAvailability(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (StoreAvailabilityConnectionQuery) -> Void) -> ProductVariantQuery {
+		open func storeAvailability(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, near: GeoCoordinateInput? = nil, _ subfields: (StoreAvailabilityConnectionQuery) -> Void) -> ProductVariantQuery {
 			var args: [String] = []
 
 			if let first = first {
@@ -271,6 +278,10 @@ extension Storefront {
 
 			if let reverse = reverse {
 				args.append("reverse:\(reverse)")
+			}
+
+			if let near = near {
+				args.append("near:\(near.serialize())")
 			}
 
 			let argsString: String? = args.isEmpty ? nil : "(\(args.joined(separator: ",")))"
@@ -348,10 +359,10 @@ extension Storefront {
 
 				case "compareAtPrice":
 				if value is NSNull { return nil }
-				guard let value = value as? String else {
+				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: ProductVariant.self, field: fieldName, value: fieldValue)
 				}
-				return Decimal(string: value, locale: GraphQL.posixLocale)
+				return try MoneyV2(fields: value)
 
 				case "compareAtPriceV2":
 				if value is NSNull { return nil }
@@ -397,10 +408,10 @@ extension Storefront {
 				return try Metafield(fields: value) } as [Any?]
 
 				case "price":
-				guard let value = value as? String else {
+				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: ProductVariant.self, field: fieldName, value: fieldValue)
 				}
-				return Decimal(string: value, locale: GraphQL.posixLocale)
+				return try MoneyV2(fields: value)
 
 				case "priceV2":
 				guard let value = value as? [String: Any] else {
@@ -510,17 +521,17 @@ extension Storefront {
 
 		/// The compare at price of the variant. This can be used to mark a variant as 
 		/// on sale, when `compareAtPrice` is higher than `price`. 
-		@available(*, deprecated, message:"Use `compareAtPriceV2` instead")
-		open var compareAtPrice: Decimal? {
+		open var compareAtPrice: Storefront.MoneyV2? {
 			return internalGetCompareAtPrice()
 		}
 
-		func internalGetCompareAtPrice(alias: String? = nil) -> Decimal? {
-			return field(field: "compareAtPrice", aliasSuffix: alias) as! Decimal?
+		func internalGetCompareAtPrice(alias: String? = nil) -> Storefront.MoneyV2? {
+			return field(field: "compareAtPrice", aliasSuffix: alias) as! Storefront.MoneyV2?
 		}
 
 		/// The compare at price of the variant. This can be used to mark a variant as 
 		/// on sale, when `compareAtPriceV2` is higher than `priceV2`. 
+		@available(*, deprecated, message:"Use `compareAtPrice` instead.")
 		open var compareAtPriceV2: Storefront.MoneyV2? {
 			return internalGetCompareAtPriceV2()
 		}
@@ -586,16 +597,16 @@ extension Storefront {
 		}
 
 		/// The product variant’s price. 
-		@available(*, deprecated, message:"Use `priceV2` instead")
-		open var price: Decimal {
+		open var price: Storefront.MoneyV2 {
 			return internalGetPrice()
 		}
 
-		func internalGetPrice(alias: String? = nil) -> Decimal {
-			return field(field: "price", aliasSuffix: alias) as! Decimal
+		func internalGetPrice(alias: String? = nil) -> Storefront.MoneyV2 {
+			return field(field: "price", aliasSuffix: alias) as! Storefront.MoneyV2
 		}
 
 		/// The product variant’s price. 
+		@available(*, deprecated, message:"Use `price` instead.")
 		open var priceV2: Storefront.MoneyV2 {
 			return internalGetPriceV2()
 		}
@@ -728,6 +739,12 @@ extension Storefront {
 			var response: [GraphQL.AbstractResponse] = []
 			objectMap.keys.forEach {
 				switch($0) {
+					case "compareAtPrice":
+					if let value = internalGetCompareAtPrice() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
 					case "compareAtPriceV2":
 					if let value = internalGetCompareAtPriceV2() {
 						response.append(value)
@@ -753,6 +770,10 @@ extension Storefront {
 							response.append(contentsOf: value.childResponseObjectMap())
 						}
 					}
+
+					case "price":
+					response.append(internalGetPrice())
+					response.append(contentsOf: internalGetPrice().childResponseObjectMap())
 
 					case "priceV2":
 					response.append(internalGetPriceV2())

@@ -48,6 +48,19 @@ extension Storefront {
 			return self
 		}
 
+		/// An ordered set of delivery addresses tied to the buyer that is interacting 
+		/// with the cart. The rank of the preferences is determined by the order of 
+		/// the addresses in the array. Preferences can be used to populate relevant 
+		/// fields in the checkout flow. 
+		@discardableResult
+		open func deliveryAddressPreferences(alias: String? = nil, _ subfields: (DeliveryAddressQuery) -> Void) -> CartBuyerIdentityQuery {
+			let subquery = DeliveryAddressQuery()
+			subfields(subquery)
+
+			addField(field: "deliveryAddressPreferences", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
+
 		/// The email address of the buyer that is interacting with the cart. 
 		@discardableResult
 		open func email(alias: String? = nil) -> CartBuyerIdentityQuery {
@@ -59,6 +72,15 @@ extension Storefront {
 		@discardableResult
 		open func phone(alias: String? = nil) -> CartBuyerIdentityQuery {
 			addField(field: "phone", aliasSuffix: alias)
+			return self
+		}
+
+		/// A set of wallet preferences tied to the buyer that is interacting with the 
+		/// cart. Preferences can be used to populate relevant payment fields in the 
+		/// checkout flow. 
+		@discardableResult
+		open func walletPreferences(alias: String? = nil) -> CartBuyerIdentityQuery {
+			addField(field: "walletPreferences", aliasSuffix: alias)
 			return self
 		}
 	}
@@ -84,6 +106,12 @@ extension Storefront {
 				}
 				return try Customer(fields: value)
 
+				case "deliveryAddressPreferences":
+				guard let value = value as? [[String: Any]] else {
+					throw SchemaViolationError(type: CartBuyerIdentity.self, field: fieldName, value: fieldValue)
+				}
+				return try value.map { return try UnknownDeliveryAddress.create(fields: $0) }
+
 				case "email":
 				if value is NSNull { return nil }
 				guard let value = value as? String else {
@@ -97,6 +125,12 @@ extension Storefront {
 					throw SchemaViolationError(type: CartBuyerIdentity.self, field: fieldName, value: fieldValue)
 				}
 				return value
+
+				case "walletPreferences":
+				guard let value = value as? [String] else {
+					throw SchemaViolationError(type: CartBuyerIdentity.self, field: fieldName, value: fieldValue)
+				}
+				return value.map { return $0 }
 
 				default:
 				throw SchemaViolationError(type: CartBuyerIdentity.self, field: fieldName, value: fieldValue)
@@ -121,6 +155,18 @@ extension Storefront {
 			return field(field: "customer", aliasSuffix: alias) as! Storefront.Customer?
 		}
 
+		/// An ordered set of delivery addresses tied to the buyer that is interacting 
+		/// with the cart. The rank of the preferences is determined by the order of 
+		/// the addresses in the array. Preferences can be used to populate relevant 
+		/// fields in the checkout flow. 
+		open var deliveryAddressPreferences: [DeliveryAddress] {
+			return internalGetDeliveryAddressPreferences()
+		}
+
+		func internalGetDeliveryAddressPreferences(alias: String? = nil) -> [DeliveryAddress] {
+			return field(field: "deliveryAddressPreferences", aliasSuffix: alias) as! [DeliveryAddress]
+		}
+
 		/// The email address of the buyer that is interacting with the cart. 
 		open var email: String? {
 			return internalGetEmail()
@@ -139,6 +185,17 @@ extension Storefront {
 			return field(field: "phone", aliasSuffix: alias) as! String?
 		}
 
+		/// A set of wallet preferences tied to the buyer that is interacting with the 
+		/// cart. Preferences can be used to populate relevant payment fields in the 
+		/// checkout flow. 
+		open var walletPreferences: [String] {
+			return internalGetWalletPreferences()
+		}
+
+		func internalGetWalletPreferences(alias: String? = nil) -> [String] {
+			return field(field: "walletPreferences", aliasSuffix: alias) as! [String]
+		}
+
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
 			var response: [GraphQL.AbstractResponse] = []
 			objectMap.keys.forEach {
@@ -147,6 +204,12 @@ extension Storefront {
 					if let value = internalGetCustomer() {
 						response.append(value)
 						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
+					case "deliveryAddressPreferences":
+					internalGetDeliveryAddressPreferences().forEach {
+						response.append(($0 as! GraphQL.AbstractResponse))
+						response.append(contentsOf: ($0 as! GraphQL.AbstractResponse).childResponseObjectMap())
 					}
 
 					default:

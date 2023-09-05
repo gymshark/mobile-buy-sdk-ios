@@ -47,6 +47,9 @@ extension Storefront {
 		/// Discount already applied. 
 		case discountAlreadyApplied = "DISCOUNT_ALREADY_APPLIED"
 
+		/// Discount code isn't working right now. Please contact us for help. 
+		case discountCodeApplicationFailed = "DISCOUNT_CODE_APPLICATION_FAILED"
+
 		/// Discount disabled. 
 		case discountDisabled = "DISCOUNT_DISABLED"
 
@@ -93,6 +96,9 @@ extension Storefront {
 		/// allowed. 
 		case greaterThanOrEqualTo = "GREATER_THAN_OR_EQUAL_TO"
 
+		/// Higher value discount applied. 
+		case higherValueDiscountApplied = "HIGHER_VALUE_DISCOUNT_APPLIED"
+
 		/// The input value is invalid. 
 		case invalid = "INVALID"
 
@@ -129,6 +135,9 @@ extension Storefront {
 		/// Checkout is locked. 
 		case locked = "LOCKED"
 
+		/// Maximum number of discount codes limit reached. 
+		case maximumDiscountCodeLimitReached = "MAXIMUM_DISCOUNT_CODE_LIMIT_REACHED"
+
 		/// Missing payment input. 
 		case missingPaymentInput = "MISSING_PAYMENT_INPUT"
 
@@ -140,6 +149,9 @@ extension Storefront {
 
 		/// The input value needs to be blank. 
 		case present = "PRESENT"
+
+		/// Product is not published for this customer. 
+		case productNotAvailable = "PRODUCT_NOT_AVAILABLE"
 
 		/// Shipping rate expired. 
 		case shippingRateExpired = "SHIPPING_RATE_EXPIRED"

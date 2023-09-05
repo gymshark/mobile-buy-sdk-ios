@@ -42,7 +42,7 @@ extension Storefront {
 		///     - reverse: Reverse the order of the underlying list.
 		///
 		@discardableResult
-		open func cartLines(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (CartLineConnectionQuery) -> Void) -> CartDeliveryGroupQuery {
+		open func cartLines(alias: String? = nil, first: Int32? = nil, after: String? = nil, last: Int32? = nil, before: String? = nil, reverse: Bool? = nil, _ subfields: (BaseCartLineConnectionQuery) -> Void) -> CartDeliveryGroupQuery {
 			var args: [String] = []
 
 			if let first = first {
@@ -67,7 +67,7 @@ extension Storefront {
 
 			let argsString: String? = args.isEmpty ? nil : "(\(args.joined(separator: ",")))"
 
-			let subquery = CartLineConnectionQuery()
+			let subquery = BaseCartLineConnectionQuery()
 			subfields(subquery)
 
 			addField(field: "cartLines", aliasSuffix: alias, args: argsString, subfields: subquery)
@@ -100,6 +100,16 @@ extension Storefront {
 			addField(field: "id", aliasSuffix: alias)
 			return self
 		}
+
+		/// The selected delivery option for the delivery group. 
+		@discardableResult
+		open func selectedDeliveryOption(alias: String? = nil, _ subfields: (CartDeliveryOptionQuery) -> Void) -> CartDeliveryGroupQuery {
+			let subquery = CartDeliveryOptionQuery()
+			subfields(subquery)
+
+			addField(field: "selectedDeliveryOption", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
 	}
 
 	/// Information about the options available for one or more line items to be 
@@ -114,7 +124,7 @@ extension Storefront {
 				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: CartDeliveryGroup.self, field: fieldName, value: fieldValue)
 				}
-				return try CartLineConnection(fields: value)
+				return try BaseCartLineConnection(fields: value)
 
 				case "deliveryAddress":
 				guard let value = value as? [String: Any] else {
@@ -134,22 +144,29 @@ extension Storefront {
 				}
 				return GraphQL.ID(rawValue: value)
 
+				case "selectedDeliveryOption":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: CartDeliveryGroup.self, field: fieldName, value: fieldValue)
+				}
+				return try CartDeliveryOption(fields: value)
+
 				default:
 				throw SchemaViolationError(type: CartDeliveryGroup.self, field: fieldName, value: fieldValue)
 			}
 		}
 
 		/// A list of cart lines for the delivery group. 
-		open var cartLines: Storefront.CartLineConnection {
+		open var cartLines: Storefront.BaseCartLineConnection {
 			return internalGetCartLines()
 		}
 
-		open func aliasedCartLines(alias: String) -> Storefront.CartLineConnection {
+		open func aliasedCartLines(alias: String) -> Storefront.BaseCartLineConnection {
 			return internalGetCartLines(alias: alias)
 		}
 
-		func internalGetCartLines(alias: String? = nil) -> Storefront.CartLineConnection {
-			return field(field: "cartLines", aliasSuffix: alias) as! Storefront.CartLineConnection
+		func internalGetCartLines(alias: String? = nil) -> Storefront.BaseCartLineConnection {
+			return field(field: "cartLines", aliasSuffix: alias) as! Storefront.BaseCartLineConnection
 		}
 
 		/// The destination address for the delivery group. 
@@ -179,6 +196,15 @@ extension Storefront {
 			return field(field: "id", aliasSuffix: alias) as! GraphQL.ID
 		}
 
+		/// The selected delivery option for the delivery group. 
+		open var selectedDeliveryOption: Storefront.CartDeliveryOption? {
+			return internalGetSelectedDeliveryOption()
+		}
+
+		func internalGetSelectedDeliveryOption(alias: String? = nil) -> Storefront.CartDeliveryOption? {
+			return field(field: "selectedDeliveryOption", aliasSuffix: alias) as! Storefront.CartDeliveryOption?
+		}
+
 		internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
 			var response: [GraphQL.AbstractResponse] = []
 			objectMap.keys.forEach {
@@ -195,6 +221,12 @@ extension Storefront {
 					internalGetDeliveryOptions().forEach {
 						response.append($0)
 						response.append(contentsOf: $0.childResponseObjectMap())
+					}
+
+					case "selectedDeliveryOption":
+					if let value = internalGetSelectedDeliveryOption() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
 					}
 
 					default:
